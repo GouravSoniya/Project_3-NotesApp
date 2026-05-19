@@ -21,9 +21,11 @@ export default function NotesApp({ user }: Props) {
   const [editTitle, setEditTitle] = useState('')
   const [editContent, setEditContent] = useState('')
   const [search, setSearch] = useState('')
-
   const { notes, setNotes, addNote, updateNote, deleteNote } = useNotesStore()
   const supabase = createClient()
+  const [chatMessage, setChatMessage] = useState('')
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai', text: string }[]>([])
+  const [chatLoading, setChatLoading] = useState(false)
 
   useEffect(() => {
     async function fetchNotes() {
@@ -41,17 +43,20 @@ export default function NotesApp({ user }: Props) {
   async function handleCreateNote() {
     if (!title.trim()) return
 
-    const { data, error } = await supabase
-      .from('notes')
-      .insert({
-        title: title.trim(),
-        content: content.trim() || null,
-        user_id: user.id
-      })
-      .select()
-      .single()
+    const response = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title.trim(), content: content.trim() || null })
+    })
 
-    if (data) {
+    const data = await response.json()
+
+    if (response.status === 429) {
+      alert(data.error)
+      return
+    }
+
+    if (data.id) {
       addNote(data)
       setTitle('')
       setContent('')
@@ -62,26 +67,49 @@ export default function NotesApp({ user }: Props) {
   async function handleUpdateNote() {
     if (!editingNote || !editTitle.trim()) return
 
-    const { data, error } = await supabase
-      .from('notes')
-      .update({
+    const response = await fetch('/api/notes', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: editingNote,
         title: editTitle.trim(),
-        content: editContent.trim() || null,
-        updated_at: new Date().toISOString()
+        content: editContent.trim() || null
       })
-      .eq('id', editingNote)
-      .select()
-      .single()
+    })
 
-    if (data) {
+    const data = await response.json()
+
+    if (data.id) {
       updateNote(editingNote, data)
       setEditingNote(null)
     }
   }
 
   async function handleDeleteNote(id: string) {
-    await supabase.from('notes').delete().eq('id', id)
-    deleteNote(id)
+      await supabase.from('notes').delete().eq('id', id)
+      deleteNote(id)
+    }
+
+    async function handleSendMessage() {
+    if (!chatMessage.trim() || chatLoading) return
+
+    const userMessage = chatMessage.trim()
+    setChatHistory(prev => [...prev, { role: 'user', text: userMessage }])
+    setChatMessage('')
+    setChatLoading(true)
+
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage })
+    })
+
+    const data = await response.json()
+    setChatLoading(false)
+
+    if (data.reply) {
+      setChatHistory(prev => [...prev, { role: 'ai', text: data.reply }])
+    }
   }
 
   return (
@@ -296,13 +324,35 @@ export default function NotesApp({ user }: Props) {
           <div className="p-4 border-b border-white/10">
             <p className="text-white text-sm font-medium">AI Assistant</p>
           </div>
-          <div className="flex-1 p-4">
-            <p className="text-white/40 text-sm">Ask anything about your notes...</p>
+          <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3">
+            {chatHistory.length === 0 && (
+              <p className="text-white/40 text-sm">Ask anything about your notes...</p>
+            )}
+            {chatHistory.map((msg, i) => (
+              <div
+                key={i}
+                className={`text-sm px-3 py-2 rounded-xl max-w-[90%] ${
+                  msg.role === 'user'
+                    ? 'bg-white/20 text-white self-end'
+                    : 'bg-white/10 text-white/80 self-start'
+                }`}
+              >
+                {msg.text}
+              </div>
+            ))}
+            {chatLoading && (
+              <div className="bg-white/10 text-white/50 text-sm px-3 py-2 rounded-xl self-start">
+                Thinking...
+              </div>
+            )}
           </div>
           <div className="p-3 border-t border-white/10">
             <input
               type="text"
               placeholder="Type a message..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
               className="w-full px-3 py-2 rounded-xl text-white placeholder-white/30 outline-none text-sm"
               style={{
                 background: 'rgba(255,255,255,0.1)',
