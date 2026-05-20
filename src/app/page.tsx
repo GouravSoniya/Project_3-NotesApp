@@ -19,12 +19,29 @@ export default async function Home() {
     if (data.url) redirect(data.url)
   }
 
+  async function signOut() {
+    'use server'
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+    redirect('/')
+  }
+
   if (!user) {
     return (
       <Background>
         <main className="min-h-screen flex items-center justify-center">
           <form action={signInWithGoogle}>
-            <button type="submit" className="text-white">Sign in with Google</button>
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-full text-white text-sm transition-colors hover:text-white/80"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              Sign in with Google
+            </button>
           </form>
         </main>
       </Background>
@@ -33,7 +50,7 @@ export default async function Home() {
 
   return (
     <Background>
-      <NotesApp user={{ id: user.id, email: user.email! }} />
+      <NotesApp user={{ id: user.id, email: user.email! }} signOut={signOut} />
     </Background>
   )
 }

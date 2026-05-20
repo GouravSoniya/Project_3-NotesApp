@@ -6,6 +6,15 @@ import Groq from 'groq-sdk'
 const cohere = new CohereClient({ token: process.env.COHERE_API_KEY })
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
+console.log(process.env.GROQ_API_KEY)
+
+function classifyQuery(message: string): 'metadata' | 'content' {
+  const lower = message.toLowerCase()
+  const metadataKeywords = ['how many', 'count', 'total', 'oldest', 'newest', 'last note', 'first note']
+  if (metadataKeywords.some(k => lower.includes(k))) return 'metadata'
+  return 'content'
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,7 +23,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Check AI message limit
   const today = new Date().toISOString().split('T')[0]
   const { data: usage } = await supabase
     .from('usage')
@@ -34,31 +42,53 @@ export async function POST(request: Request) {
   const currentUsage = usage?.ai_messages || 0
 
   // TODO: uncomment after Razorpay is set up
-  // if (currentUsage >= limit) {
-  //   return NextResponse.json(
-  //     { error: `Daily limit of ${limit} AI messages reached.` },
-  //     { status: 429 }
-  //   )
-  // }
+  if (currentUsage >= limit) {
+    return NextResponse.json(
+      { error: `Daily limit of ${limit} AI messages reached.` },
+      { status: 429 }
+    )
+  }
 
   const { message } = await request.json()
+  const intent = classifyQuery(message)
+  let context = ''
 
-  // Embed the query
-  const queryEmbedding = await cohere.embed({
-    texts: [message],
-    model: 'embed-english-v3.0',
-    inputType: 'search_query'
-  })
-  const embedding = (queryEmbedding.embeddings as number[][])[0]
+  if (intent === 'metadata') {
+    const { count } = await supabase
+      .from('notes')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
 
-  // Find similar notes
-  const { data: matches } = await supabase.rpc('match_embeddings', {
-    query_embedding: embedding,
-    match_user_id: user.id,
-    match_count: 5
-  })
+    context = `The user has ${count} notes in total.`
 
-  const context = matches?.map((m: { content: string }) => m.content).join('\n\n') || 'No notes found.'
+  } else {
+    // Embed the query
+    const queryEmbedding = await cohere.embed({
+      texts: [message],
+      model: 'embed-english-v3.0',
+      inputType: 'search_query'
+    })
+    const embedding = (queryEmbedding.embeddings as number[][])[0]
+
+    // Find similar note IDs
+    const { data: matches } = await supabase.rpc('match_embeddings', {
+      query_embedding: embedding,
+      match_user_id: user.id,
+      match_count: 15  // bumped from 5
+    })
+
+    const noteIds = matches?.map((m: { note_id: string }) => m.note_id) || []
+
+    // Fetch actual structured notes
+    const { data: notes } = await supabase
+      .from('notes')
+      .select('title, content')
+      .in('id', noteIds)
+
+    context = notes?.map((n, i) =>
+      `Note ${i + 1}:\nTitle: ${n.title}\nContent: ${n.content || 'No content'}`
+    ).join('\n\n---\n\n') || 'No notes found.'
+  }
 
   // Update usage
   await supabase.from('usage').upsert({
@@ -69,7 +99,7 @@ export async function POST(request: Request) {
 
   // Generate response
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
+    model: 'llama-3.3-70b-versatile',  // upgraded from 8b
     messages: [
       {
         role: 'system',

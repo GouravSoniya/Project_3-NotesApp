@@ -6,6 +6,7 @@ interface Note {
   content: string | null
   created_at: string
   updated_at: string
+  embedding_status: 'pending' | 'success' | 'failed'
 }
 
 interface NotesStore {

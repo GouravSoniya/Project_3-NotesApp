@@ -8,23 +8,51 @@ const cohere = new CohereClient({
 
 async function generateAndStoreEmbedding(noteId: string, userId: string, title: string, content: string | null) {
   const embeddingContent = `${title}\n${content || ''}`
-  try {
-    const response = await cohere.embed({
-      texts: [embeddingContent],
-      model: 'embed-english-v3.0',
-      inputType: 'search_document'
-    })
-    const embedding = (response.embeddings as number[][])[0]
-    const supabase = await createClient()
-    await supabase.from('embeddings').delete().eq('note_id', noteId)
-    await supabase.from('embeddings').insert({
-      note_id: noteId,
-      user_id: userId,
-      content: embeddingContent,
-      embedding
-    })
-  } catch (err) {
-    console.error('Embedding generation failed:', err)
+  const maxRetries = 3
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Wait longer on each retry
+      if (attempt > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt - 1)))
+      }
+
+      const response = await cohere.embed({
+        texts: [embeddingContent],
+        model: 'embed-english-v3.0',
+        inputType: 'search_document'
+      })
+      const embedding = (response.embeddings as number[][])[0]
+      const supabase = await createClient()
+
+      await supabase.from('embeddings').delete().eq('note_id', noteId)
+      await supabase.from('embeddings').insert({
+        note_id: noteId,
+        user_id: userId,
+        content: embeddingContent,
+        embedding
+      })
+
+      // Mark as success
+      await supabase
+        .from('notes')
+        .update({ embedding_status: 'success' })
+        .eq('id', noteId)
+
+      return // success, stop retrying
+
+    } catch (err) {
+      console.error(`Embedding attempt ${attempt + 1} failed:`, err)
+
+      // Only mark as failed after all retries exhausted
+      if (attempt === maxRetries - 1) {
+        const supabase = await createClient()
+        await supabase
+          .from('notes')
+          .update({ embedding_status: 'failed' })
+          .eq('id', noteId)
+      }
+    }
   }
 }
 
@@ -54,13 +82,12 @@ export async function POST(request: Request) {
   const limit = plan === 'pro' ? Infinity : 5
   const currentUsage = usage?.notes_created || 0
 
-  // TODO: uncomment after Razorpay is set up
-  // if (currentUsage >= limit) {
-  //   return NextResponse.json(
-  //     { error: 'Daily limit of 5 notes reached. Upgrade to Pro for unlimited notes.' },
-  //     { status: 429 }
-  //   )
-  // }
+  if (currentUsage >= limit) {
+    return NextResponse.json(
+      { error: 'Daily limit of 5 notes reached. Upgrade to Pro for unlimited notes.' },
+      { status: 429 }
+    )
+  }
 
   const { title, content } = await request.json()
 
@@ -78,7 +105,7 @@ export async function POST(request: Request) {
     notes_created: currentUsage + 1
   }, { onConflict: 'user_id,date' })
 
-  generateAndStoreEmbedding(note.id, user.id, title, content)
+  await generateAndStoreEmbedding(note.id, user.id, title, content)
 
   return NextResponse.json(note)
 }
@@ -107,7 +134,7 @@ export async function PATCH(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  generateAndStoreEmbedding(note.id, user.id, title, content)
+  await generateAndStoreEmbedding(note.id, user.id, title, content)
 
   return NextResponse.json(note)
 }
