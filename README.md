@@ -11,12 +11,13 @@ I relied on AI yes but I tried my best to understand as much of the code as I co
 
 * Convert route handlers to server actions
 * Fix payment flow with orders table
-* Delete the API key log
 * Fix hardcoded localhost
 * Fix middleware naming + handle /api/ routes returning 401 instead of redirect (then remove individual auth checks from route handlers)
 * Split NotesApp into smaller components
 * Extract rate limiting into a src/lib/rateLimit.ts utility with a central LIMITS config
 
 I am not going to make these changes because I want to move on from this project and implement what I learnt in my next project. I realised that I don't really like next js as backend so I am gonna use python as backend in upcomind projects
+
+Here's the live demo link : https://project-3-notes-app.vercel.app/
 
 Thank you for you time
