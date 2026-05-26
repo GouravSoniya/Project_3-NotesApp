@@ -6,8 +6,6 @@ import Groq from 'groq-sdk'
 const cohere = new CohereClient({ token: process.env.COHERE_API_KEY })
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-console.log(process.env.GROQ_API_KEY)
-
 function classifyQuery(message: string): 'metadata' | 'content' {
   const lower = message.toLowerCase()
   const metadataKeywords = ['how many', 'count', 'total', 'oldest', 'newest', 'last note', 'first note']
