@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+So this is an more advance version of the notes app I made previously. 
 
-## Getting Started
+I used :
+- next js + supabase combo for frontend and backend
+- cohere to embed the notes and then stored it in supabase pgvector store
+- used groq for llm
+- razorpay for payment(it doesn't work because I didn't create any accound on razorpay. Creating an account on razorpay is not a part of my job so I skipped it and focused on the code instead. The payment will work just fine once I replace the fake api tokens with actual razorpay tokens
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+I relied on AI yes but I tried my best to understand as much of the code as I could. This note app is not perfect, atleast it's not what I mind when it comes to understading the code. I tried my best to understand it and then compiled a list of things which I can do to improve this further :
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* Convert route handlers to server actions
+* Fix payment flow with orders table
+* Fix hardcoded localhost
+* Fix middleware naming + handle /api/ routes returning 401 instead of redirect (then remove individual auth checks from route handlers)
+* Split NotesApp into smaller components
+* Extract rate limiting into a src/lib/rateLimit.ts utility with a central LIMITS config
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+I am not going to make these changes because I want to move on from this project and implement what I learnt in my next project. I realised that I don't really like next js as backend so I am gonna use python as backend in upcomind projects
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Here's the live demo link : https://project-3-notes-app.vercel.app/
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Thank you for you time
