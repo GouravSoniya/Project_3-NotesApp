@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { CohereClient } from 'cohere-ai'
+import { after } from 'next/server'
 
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY
@@ -105,7 +106,9 @@ export async function POST(request: Request) {
     notes_created: currentUsage + 1
   }, { onConflict: 'user_id,date' })
 
-  generateAndStoreEmbedding(note.id, user.id, title, content)
+  after(async () => {
+  await generateAndStoreEmbedding(note.id, user.id, title, content)
+  })
 
   return NextResponse.json(note)
 }
@@ -134,7 +137,9 @@ export async function PATCH(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  generateAndStoreEmbedding(note.id, user.id, title, content)
+  after(async () => {
+  await generateAndStoreEmbedding(note.id, user.id, title, content)
+  })
 
   return NextResponse.json(note)
 }

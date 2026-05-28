@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
   // Verify the webhook is actually from Razorpay
   const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+    .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
     .update(body)
     .digest('hex')
 
@@ -19,7 +19,8 @@ export async function POST(request: Request) {
   const event = JSON.parse(body)
 
   if (event.event === 'payment.captured') {
-    const userId = event.payload.payment.entity.receipt.split('_')[1]
+    const parts = event.payload.payment.entity.receipt.split('_')
+    const userId = parts.slice(1, -1).join('_') // receipt format: "receipt_{userId}_{timestamp}"
 
     const supabase = await createClient()
     await supabase.from('subscriptions').upsert({
