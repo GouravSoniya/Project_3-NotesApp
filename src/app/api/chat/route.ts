@@ -88,13 +88,7 @@ export async function POST(request: Request) {
     ).join('\n\n---\n\n') || 'No notes found.'
   }
 
-  // Update usage
-  await supabase.from('usage').upsert({
-    user_id: user.id,
-    date: today,
-    ai_messages: currentUsage + 1
-  }, { onConflict: 'user_id,date' })
-
+  
   // Generate response
   const completion = await groq.chat.completions.create({
     model: 'llama-3.3-70b-versatile',  // upgraded from 8b
@@ -109,8 +103,15 @@ export async function POST(request: Request) {
       }
     ]
   })
-
+  
   const reply = completion.choices[0].message.content
-
+  
+  // Update usage
+  await supabase.from('usage').upsert({
+    user_id: user.id,
+    date: today,
+    ai_messages: currentUsage + 1
+  }, { onConflict: 'user_id,date' })
+  
   return NextResponse.json({ reply })
 }

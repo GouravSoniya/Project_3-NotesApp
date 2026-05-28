@@ -144,6 +144,8 @@ export default function NotesApp({ user, signOut }: Props) {
 
     if (data.reply) {
       setChatHistory(prev => [...prev, { role: 'ai', text: data.reply }])
+    } else if (data.error) {
+      setChatHistory(prev => [...prev, { role: 'ai', text: data.error }])
     }
   }
 
