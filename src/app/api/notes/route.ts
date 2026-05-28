@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     notes_created: currentUsage + 1
   }, { onConflict: 'user_id,date' })
 
-  await generateAndStoreEmbedding(note.id, user.id, title, content)
+  generateAndStoreEmbedding(note.id, user.id, title, content)
 
   return NextResponse.json(note)
 }
@@ -134,7 +134,7 @@ export async function PATCH(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  await generateAndStoreEmbedding(note.id, user.id, title, content)
+  generateAndStoreEmbedding(note.id, user.id, title, content)
 
   return NextResponse.json(note)
 }
