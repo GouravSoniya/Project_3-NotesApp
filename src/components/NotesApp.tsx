@@ -97,7 +97,9 @@ export default function NotesApp({ user, signOut }: Props) {
       order_id: orderId,
       name: 'Notes App',
       description: 'Pro Plan - ₹199/month',
-      handler: function () { alert('Payment successful! You are now Pro.') },
+      handler: function () { 
+        setPlan('pro')
+        alert('Payment successful! You are now Pro.') },
     }
     // @ts-ignore
     new window.Razorpay(options).open()
