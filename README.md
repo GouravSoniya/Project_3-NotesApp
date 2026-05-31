@@ -4,16 +4,20 @@ I used :
 - next js + supabase combo for frontend and backend
 - cohere to embed the notes and then stored it in supabase pgvector store
 - used groq for llm
-- razorpay for payment(it doesn't work because I didn't create any accound on razorpay. Creating an account on razorpay is not a part of my job so I skipped it and focused on the code instead. The payment will work just fine once I replace the fake api tokens with actual razorpay tokens
+- stripe for payment(it's in test mode)
 
+I originally used razorpay but razorpay don't give us test keys without the KYC but stripe give us that right after login so I chose that, besides it doesn't matter which payment gateway I choose all of them are pretty same.
 
-I relied on AI yes but I tried my best to understand as much of the code as I could. This note app is not perfect, atleast it's not what I mind when it comes to understading the code. I tried my best to understand it and then compiled a list of things which I can do to improve this further :
-
-* Fix payment flow with orders table
-* Extract rate limiting into a src/lib/rateLimit.ts utility with a central LIMITS config
-
-I am not going to make these changes because I want to move on from this project and implement what I learnt in my next project. I realised that I don't really like next js as backend so I am gonna use python as backend in upcomind projects
+A confession - i relied on AI but I do understand the overall architecture and I was consiciously and actively involved in taking decisions for the backend and frontend.
 
 Here's the live demo link : https://project-3-notes-app.vercel.app/
+
+NOTE - you can test the payment using a test card:
+
+    Card number: 4242 4242 4242 4242
+    Expiry: any future date e.g. 12/26
+    CVC: any 3 digits e.g. 123
+
+any email and fullname, doesn't matter the payment will happen
 
 Thank you for you time
