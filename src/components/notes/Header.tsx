@@ -5,11 +5,10 @@ interface Props {
   plan: 'free' | 'pro'
   onNewNote: () => void
   onUpgrade: () => void
-  onDevUpgrade: () => void
   signOut: () => Promise<void>
 }
 
-export default function Header({ user, plan, onNewNote, onUpgrade, onDevUpgrade, signOut }: Props) {
+export default function Header({ user, plan, onNewNote, onUpgrade, signOut }: Props) {
   return (
     <header className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-4">
@@ -42,15 +41,6 @@ export default function Header({ user, plan, onNewNote, onUpgrade, onDevUpgrade,
             onClick={onUpgrade}
           >
             ✦ Upgrade to Pro
-          </button>
-        )}
-        {process.env.NODE_ENV === 'development' && (
-          <button
-            className="px-5 py-2.5 rounded-full text-white/80 hover:text-white text-sm transition-colors"
-            style={{ background: 'rgba(255,165,0,0.2)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,165,0,0.4)' }}
-            onClick={onDevUpgrade}
-          >
-            [DEV] Upgrade
           </button>
         )}
         <div

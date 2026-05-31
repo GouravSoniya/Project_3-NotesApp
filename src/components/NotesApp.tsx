@@ -22,6 +22,11 @@ export default function NotesApp({ user, signOut }: Props) {
   const supabase = createClient()
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('upgraded') === 'true') {
+      setPlan('pro')
+      window.history.replaceState({}, '', '/')
+    }
     async function fetchNotes() {
       const { data } = await supabase
         .from('notes')
@@ -87,22 +92,10 @@ export default function NotesApp({ user, signOut }: Props) {
   }
 
   async function handleUpgrade() {
-    const response = await fetch('/api/razorpay/order', { method: 'POST' })
+    const response = await fetch('/api/stripe/checkout', { method: 'POST' })
     if (!response.ok) { alert('Something went wrong. Try again.'); return }
-    const { orderId, amount } = await response.json()
-    const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount,
-      currency: 'INR',
-      order_id: orderId,
-      name: 'Notes App',
-      description: 'Pro Plan - ₹199/month',
-      handler: function () { 
-        setPlan('pro')
-        alert('Payment successful! You are now Pro.') },
-    }
-    // @ts-ignore
-    new window.Razorpay(options).open()
+    const { url } = await response.json()
+    window.location.href = url
   }
 
   return (
@@ -112,10 +105,6 @@ export default function NotesApp({ user, signOut }: Props) {
         plan={plan}
         onNewNote={() => setCreatingNote(true)}
         onUpgrade={handleUpgrade}
-        onDevUpgrade={async () => {
-          await fetch('/api/dev/upgrade', { method: 'POST' })
-          setPlan('pro')
-        }}
         signOut={signOut}
       />
       <SearchBar value={search} onChange={setSearch} />
