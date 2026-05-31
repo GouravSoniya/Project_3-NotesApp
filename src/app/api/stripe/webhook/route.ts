@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     const userId = session.metadata?.user_id
 
     if (userId) {
-      const supabase = await createClient()
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SECRET_KEY!
+      )
       await supabase.from('subscriptions').upsert({
         user_id: userId,
         plan: 'pro'
