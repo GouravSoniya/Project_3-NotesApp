@@ -1,12 +1,5 @@
 So this is an more advance version of the notes app I made previously. 
-it has everything :
-- next js
-- supabase
-- auth with google sign
-- zustand
-- ai chat bot
-- rag pipeline
-- stripe for payments
+it has everything - next js, supabase, auth with google sign, zustand, ai chat bot, rag pipeline, stripe for payments
 
 I used :
 - next js + supabase combo for frontend and backend
