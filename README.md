@@ -1,4 +1,5 @@
-So this is an more advance version of the notes app I made previously. it has everything :
+So this is an more advance version of the notes app I made previously. 
+it has everything :
 - next js
 - supabase
 - auth with google sign
