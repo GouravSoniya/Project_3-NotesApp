@@ -9,7 +9,8 @@ I used :
 
 I originally used razorpay but razorpay don't give us test keys without the KYC but stripe give us that right after login so I chose that, besides it doesn't matter which payment gateway I choose all of them are pretty same.
 
-A confession - i relied on AI but I do understand the overall architecture and I was consiciously and actively involved in taking decisions for the backend and frontend.
+I'm stronger on system design and architecture than I am on syntax — I used AI to fill that gap while I own the decisions on how things are structured. 
+I was consiciously and actively involved in taking decisions for both the backend and frontend.
 
 Here's the live demo link : https://project-3-notes-app.vercel.app/
 
