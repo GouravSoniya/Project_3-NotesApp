@@ -24,9 +24,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${cormorant.variable} ${dmSans.variable} min-h-full font-[family-name:var(--font-dm-sans)]`}>
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+    <html lang="en">
+      <body className={`${cormorant.variable} ${dmSans.variable} font-[family-name:var(--font-dm-sans)]`}>
         {children}
       </body>
     </html>
