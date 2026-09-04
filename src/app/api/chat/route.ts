@@ -91,7 +91,7 @@ export async function POST(request: Request) {
   
   // Generate response
   const completion = await groq.chat.completions.create({
-    model: 'llama-3.3-70b-versatile',  // upgraded from 8b
+    model: 'qwen/qwen3.8-27b',  // upgraded from 8b
     messages: [
       {
         role: 'system',
